@@ -7,7 +7,6 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-const PORT = 3000;
 
 // dữ liệu user
 const users = [
