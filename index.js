@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path"); // Thêm module path để xử lý đường dẫn file
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -59,6 +60,19 @@ app.delete("/users/:id", (req, res) => {
 
   res.json({ message: "User deleted" });
 });
+
+// --- PHẦN CẤU HÌNH PHỤC VỤ FRONTEND ---
+
+// 1. Chỉ định thư mục chứa các file tĩnh (HTML, CSS, JS) là thư mục 'dist'
+app.use(express.static(path.join(__dirname, "dist")));
+
+// 2. Catch-all route: Bất kỳ request nào KHÔNG phải là API thì sẽ trả về file index.html của React.
+// Điều này rất quan trọng để React Router (nếu sau này bạn dùng) hoạt động mà không bị lỗi 404 khi người dùng F5 tải lại trang.
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
+
+// ---------------------------------------
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
