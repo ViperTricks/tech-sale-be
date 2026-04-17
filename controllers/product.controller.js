@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const Product = require("../models/product.model");
 
 // GET PRODUCTS
 const getProducts = async (req, res) => {
@@ -9,6 +10,21 @@ const getProducts = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// GET DETAIL
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.getById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 // CREATE PRODUCT
 const createProduct = async (req, res) => {
@@ -26,4 +42,4 @@ const createProduct = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, createProduct };
+module.exports = { getProducts, createProduct, getProductById };
