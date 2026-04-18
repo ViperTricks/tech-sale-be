@@ -42,6 +42,3 @@ coverage/
 # SSL certificates
 
 
-# Build folder
-dist/
-build/
