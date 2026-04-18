@@ -20,7 +20,7 @@ Thumbs.db
 .idea/
 
 # Build / dist
-dist/
+
 build/
 
 # Upload folder (nếu có dùng local)
@@ -40,10 +40,7 @@ coverage/
 .eslintcache
 
 # SSL certificates
-*.pem
-ca.pem
-cert.pem
-key.pem
+
 
 # Build folder
 dist/
