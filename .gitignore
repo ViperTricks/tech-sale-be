@@ -41,10 +41,4 @@ coverage/
 
 # SSL certificates
 *.pem
-ca.pem
-cert.pem
-key.pem
 
-# Build folder
-dist/
-build/
