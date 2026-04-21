@@ -11,7 +11,7 @@ app.use(express.json());
 // Routes
 app.use("/api/categories", require("./routes/category.routes"));
 app.use("/api/products", require("./routes/product.routes"));
-
+app.use("/users", require("./routes/auth.routes"));
 // ✅ Render sẽ cấp PORT
 const PORT = process.env.PORT || 3000;
 
