@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user.model");
+const Auth = require("../models/auth.model");
 
 const SECRET = process.env.JWT_SECRET;
 
@@ -8,24 +8,23 @@ const SECRET = process.env.JWT_SECRET;
 // REGISTER
 const register = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Thiếu email hoặc password" });
     }
 
-    const existingUser = await User.findByEmail(email);
+    const existingUser = await Auth.findByEmail(email);
     if (existingUser) {
       return res.status(400).json({ message: "Email đã tồn tại" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const userId = await User.create({
+    const userId = await Auth.create({
       name,
       email,
       password_hash: hashedPassword, // ✔️ đúng DB
-      phone,
     });
 
     res.json({
@@ -47,7 +46,7 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Thiếu email hoặc password" });
     }
 
-    const user = await User.findByEmail(email);
+    const user = await Auth.findByEmail(email);
     if (!user) {
       return res.status(400).json({ message: "Email không tồn tại" });
     }
@@ -75,7 +74,6 @@ const login = async (req, res) => {
         id: user.user_id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
       },
     });
 

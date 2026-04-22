@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 
-const User = {
+const auth = {
     // tìm theo email
     findByEmail: async (email) => {
         const [rows] = await pool.query(
@@ -34,4 +34,4 @@ const User = {
 };
 
 
-module.exports = User;
+module.exports = auth;
