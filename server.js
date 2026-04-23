@@ -12,15 +12,16 @@ app.use(express.json());
 const productRoutes = require("./routes/product.routes");
 const cartRoutes = require("./routes/cart.routes");
 const authRoutes = require("./routes/auth.routes");
-// const orderRoutes = require("./routes/order.routes");
+const orderRoutes = require("./routes/order.routes");
 
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
+app.use("/orders", orderRoutes);
+
 app.get("/kiemtra", (req, res) => {
   res.send("<h1>Chào Nguyễn! Server đã nhận code mới rồi nhé!</h1>");
 });
-// app.use("/orders", orderRoutes);
 // start server
 const PORT = process.env.PORT || 3000;
 
