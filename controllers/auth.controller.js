@@ -62,6 +62,8 @@ const login = async (req, res) => {
       {
         userId: user.user_id,
         email: user.email,
+        phone: user.phone,
+        address: user.address
       },
       SECRET,
       { expiresIn: "1h" }
@@ -81,4 +83,46 @@ const login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-module.exports = { register, login };
+// GET PROFILE
+const getProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const user = await Auth.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy user" });
+    }
+
+    res.json({
+      id: user.user_id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+// UPDATE PROFILE
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { name, phone, address } = req.body;
+
+    // validate đơn giản
+    if (!name) {
+      return res.status(400).json({ message: "Tên không được để trống" });
+    }
+
+    await Auth.updateProfile(userId, { name, phone, address });
+
+    res.json({ message: "Cập nhật thành công" });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+module.exports = { register, login, getProfile, updateProfile };

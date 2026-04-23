@@ -26,12 +26,30 @@ const auth = {
     // tìm theo id (dùng sau này)
     findById: async (id) => {
         const [rows] = await pool.query(
-            "SELECT user_id, name, email, phone FROM users WHERE user_id = ?",
+            "SELECT user_id, name, email, phone, address FROM users WHERE user_id = ?",
             [id]
         );
         return rows[0];
     },
-};
 
+    // 🔥 UPDATE PROFILE (THÊM MỚI)
+    updateProfile: async (userId, data) => {
+        const { name, phone, address } = data;
+
+        const [result] = await pool.query(
+            `UPDATE users
+             SET name = ?, phone = ?, address = ?
+             WHERE user_id = ?`,
+            [
+                name,
+                phone || null,
+                address || null,
+                userId
+            ]
+        );
+
+        return result.affectedRows; // dùng để check update thành công
+    }
+};
 
 module.exports = auth;
