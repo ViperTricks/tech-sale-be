@@ -11,7 +11,9 @@ module.exports = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // 🔥 { userId, email }
+        req.user = {
+            userId: decoded.userId || decoded.id
+        };
         next();
     } catch (err) {
         return res.status(403).json({ message: "Token không hợp lệ" });

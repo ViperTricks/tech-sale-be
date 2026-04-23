@@ -25,19 +25,11 @@ const pool = mysql.createPool({
     try {
         console.log(`--- Đang kết nối tới DB: ${process.env.DB_DATABASE} ---`);
         const connection = await pool.getConnection();
-<<<<<<< HEAD
-        console.log('✅ Connected to Aiven MySQL thành công!');        
-=======
         console.log('✅ Connected to Aiven MySQL thành công!');
->>>>>>> b14ac5994968fa52c2dc1733ed7b6f0964e28b78
         connection.release();
     } catch (err) {
         console.error('❌ Lỗi hệ thống:', err.message);
     }
 })();
 
-<<<<<<< HEAD
 module.exports = pool;
-=======
-module.exports = pool;
->>>>>>> b14ac5994968fa52c2dc1733ed7b6f0964e28b78
