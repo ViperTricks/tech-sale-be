@@ -29,11 +29,11 @@ const getProductById = async (req, res) => {
 // CREATE PRODUCT
 const createProduct = async (req, res) => {
   try {
-    const { name, price, stock, category_id } = req.body;
+    const { name, price, description, stock, category_id } = req.body;
 
     await pool.query(
-      "INSERT INTO products (name, price, stock, category_id) VALUES (?, ?, ?, ?)",
-      [name, price, stock, category_id]
+      "INSERT INTO products (name, price, description, stock, category_id) VALUES (?, ?, ?, ?, ?)",
+      [name, price, description, stock, category_id]
     );
 
     res.json({ message: "Product created" });

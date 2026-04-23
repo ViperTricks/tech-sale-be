@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+node_modules/
+.env
+=======
 # Node modules
 node_modules/
 
@@ -42,3 +46,4 @@ coverage/
 # SSL certificates
 *.pem
 
+>>>>>>> b14ac5994968fa52c2dc1733ed7b6f0964e28b78
