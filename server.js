@@ -22,7 +22,8 @@ app.get("/kiemtra", (req, res) => {
 const orderRoutes = require("./routes/order.routes");
 app.use("/orders", orderRoutes);
 // start server
-app.listen(3000, () => {
-  console.log("Server running at http://localhost:3000");
-});
+const PORT = process.env.PORT || 3000;
 
+app.listen(PORT, () => {
+  console.log(`Server running at port ${PORT}`);
+});
