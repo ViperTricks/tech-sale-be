@@ -43,3 +43,19 @@ const createProduct = async (req, res) => {
 };
 
 module.exports = { getProducts, createProduct, getProductById };
+
+
+// 🔹 Backend
+// API:
+// GET /products
+// Flow:
+// Frontend gọi API /products
+// Backend:
+// const [rows] = await pool.query("SELECT * FROM products");
+
+// → Lấy toàn bộ sản phẩm từ DB
+
+// Trả về JSON:
+// [
+//   { product_id, name, price, image_url, ... }
+// ]
