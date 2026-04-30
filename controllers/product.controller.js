@@ -1,16 +1,24 @@
 const pool = require("../config/db");
 const Product = require("../models/product.model");
 
-// GET PRODUCTS
+// =======================
+// GET PRODUCTS (FIX SOFT DELETE BUG)
+// =======================
 const getProducts = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT * FROM products");
+    const [rows] = await pool.query(
+      "SELECT * FROM products WHERE status = 'active'"
+    );
+
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+// =======================
 // GET DETAIL
+// =======================
 const getProductById = async (req, res) => {
   try {
     const product = await Product.getById(req.params.id);
@@ -25,15 +33,26 @@ const getProductById = async (req, res) => {
   }
 };
 
-
+// =======================
 // CREATE PRODUCT
+// =======================
 const createProduct = async (req, res) => {
   try {
-    const { name, price, description, stock, category_id } = req.body;
+    const { name, price, description, stock, category_id, image_url } = req.body;
 
     await pool.query(
-      "INSERT INTO products (name, price, description, stock, category_id) VALUES (?, ?, ?, ?, ?)",
-      [name, price, description, stock, category_id]
+      `INSERT INTO products 
+      (name, price, description, stock, category_id, image_url, status) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name,
+        price,
+        description || "",
+        stock || 0,
+        category_id || 1,
+        image_url || "https://via.placeholder.com/150",
+        "active"
+      ]
     );
 
     res.json({ message: "Product created" });
@@ -42,4 +61,55 @@ const createProduct = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, createProduct, getProductById };
+// =======================
+// SOFT DELETE
+// =======================
+const softDeleteProduct = async (req, res) => {
+  try {
+    console.log("🔥 DELETE HIT:", req.params.id);
+    const { id } = req.params;
+
+    await pool.query(
+      "UPDATE products SET status = 'deleted' WHERE product_id = ?",
+      [id]
+    );
+
+    res.json({ message: "Đã xoá mềm" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+// =======================
+// UPDATE PRODUCT (FIX EDIT)
+// =======================
+const updateProduct = async (req, res) => {
+  try {
+    console.log("🔥 UPDATE HIT:", req.params.id, req.body);
+    const { id } = req.params;
+    const { name, price, image_url, stock } = req.body;
+
+    const [result] = await pool.query(
+      `UPDATE products 
+       SET name = ?, price = ?, image_url = ?, stock = ?
+       WHERE product_id = ? AND status = 'active'`,
+      [name, price, image_url, stock, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+
+    res.json({ message: "Update success" });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};  
+
+module.exports = {
+  getProducts,
+  createProduct,
+  getProductById,
+  softDeleteProduct,
+  updateProduct   // 🔥 THÊM DÒNG NÀY
+};

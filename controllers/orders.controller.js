@@ -1,12 +1,37 @@
 const pool = require("../config/db");
 
+// ======================
+// GET ALL ORDERS
+// ======================
+exports.getAllOrders = async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT * 
+            FROM orders 
+            ORDER BY created_at DESC
+        `);
+
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+
+// ======================
+// COMPLETE ORDER
+// ======================
 exports.completeOrder = async (req, res) => {
     const connection = await pool.getConnection();
 
     try {
-        const { orderId, phone, address, method } = req.body;
+        const { phone, address, method } = req.body;
 
-        const cart_id = 1; // 1 user = 1 cart (theo yêu cầu bạn)
+        // ⚠️ FIX SAU: lấy user từ token (tạm thời hardcode)
+        const user_id = req.user?.userId || 1;
+
+        // ⚠️ FIX SAU: cart theo user (tạm hardcode)
+        const cart_id = 1;
 
         await connection.beginTransaction();
 
@@ -21,37 +46,48 @@ exports.completeOrder = async (req, res) => {
             return res.status(400).json({ message: "Cart empty" });
         }
 
-        // 2. tạo order
+        // 2. tính total
         const total = cartItems.reduce(
             (sum, i) => sum + i.price * i.quantity,
             0
         );
 
+        // 3. tạo order
         const [orderResult] = await connection.query(
-            `INSERT INTO orders (user_id, total_price, status, shipping_address, phone)
-             VALUES (?, ?, 'completed', ?, ?)`,
-            [1, total, address, phone]
+            `INSERT INTO orders 
+            (user_id, total_price, status, shipping_address, phone, payment_method)
+            VALUES (?, ?, 'completed', ?, ?, ?)`,
+            [user_id, total, address, phone, method]
         );
 
-        const newOrderId = orderResult.insertId;
+        const orderId = orderResult.insertId;
 
-        // 3. insert order_items
+        // 4. insert order_items
         for (const item of cartItems) {
             await connection.query(
-                `INSERT INTO order_items (order_id, product_id, quantity, price)
-                 VALUES (?, ?, ?, ?)`,
-                [newOrderId, item.product_id, item.quantity, item.price]
+                `INSERT INTO order_items 
+                (order_id, product_id, quantity, price)
+                VALUES (?, ?, ?, ?)`,
+                [
+                    orderId,
+                    item.product_id,
+                    item.quantity,
+                    item.price
+                ]
             );
         }
 
-        // 4. clear cart
-        await connection.query("DELETE FROM cart_items WHERE cart_id = ?", [cart_id]);
+        // 5. clear cart
+        await connection.query(
+            "DELETE FROM cart_items WHERE cart_id = ?",
+            [cart_id]
+        );
 
         await connection.commit();
 
         res.json({
             success: true,
-            orderId: newOrderId
+            orderId
         });
 
     } catch (err) {
