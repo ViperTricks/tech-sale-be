@@ -2,7 +2,7 @@ const pool = require("../config/db");
 const Product = require("../models/product.model");
 
 // =======================
-// GET PRODUCTS (FIX SOFT DELETE BUG)
+// GET PRODUCTS
 // =======================
 const getProducts = async (req, res) => {
   try {
@@ -66,7 +66,6 @@ const createProduct = async (req, res) => {
 // =======================
 const softDeleteProduct = async (req, res) => {
   try {
-    console.log("🔥 DELETE HIT:", req.params.id);
     const { id } = req.params;
 
     await pool.query(
@@ -79,12 +78,12 @@ const softDeleteProduct = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 // =======================
-// UPDATE PRODUCT (FIX EDIT)
+// UPDATE PRODUCT
 // =======================
 const updateProduct = async (req, res) => {
   try {
-    console.log("🔥 UPDATE HIT:", req.params.id, req.body);
     const { id } = req.params;
     const { name, price, image_url, stock } = req.body;
 
@@ -104,12 +103,15 @@ const updateProduct = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-};  
+};
 
+// =======================
+// EXPORT
+// =======================
 module.exports = {
   getProducts,
   createProduct,
   getProductById,
   softDeleteProduct,
-  updateProduct   // 🔥 THÊM DÒNG NÀY
+  updateProduct
 };

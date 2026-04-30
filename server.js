@@ -1,10 +1,7 @@
 require("dotenv").config({ override: true });
 const express = require("express");
 const cors = require("cors");
-
 const app = express();
-
-console.log("🔥 SERVER START:", __filename);
 
 // =======================
 // MIDDLEWARE
@@ -18,12 +15,20 @@ app.use(express.json());
 const pool = require("./config/db");
 
 // =======================
-// ROUTES API CHÍNH
+// ROUTES
 // =======================
-app.use("/auth", require("./routes/auth.routes"));
-app.use("/products", require("./routes/product.routes"));
-app.use("/cart", require("./routes/cart.routes"));
-app.use("/orders", require("./routes/order.routes"));
+const productRoutes = require("./routes/product.routes");
+const cartRoutes = require("./routes/cart.routes");
+const authRoutes = require("./routes/auth.routes");
+const orderRoutes = require("./routes/order.routes");
+const userRoutes = require("./routes/user.routes");
+
+// mount routes
+app.use("/auth", authRoutes);
+app.use("/products", productRoutes);
+app.use("/cart", cartRoutes);
+app.use("/orders", orderRoutes);
+app.use("/users", userRoutes);
 
 // =======================
 // HEALTH CHECK
@@ -33,7 +38,14 @@ app.get("/health", (req, res) => {
 });
 
 // =======================
-// CHECK DB STRUCTURE
+// SIMPLE TEST ROUTE
+// =======================
+app.get("/kiemtra", (req, res) => {
+  res.send("<h1>Server OK - Backend running</h1>");
+});
+
+// =======================
+// DB CHECK (DEV ONLY)
 // =======================
 app.get("/check-db", async (req, res) => {
   try {
@@ -45,83 +57,13 @@ app.get("/check-db", async (req, res) => {
 });
 
 // =======================
-// ADD STATUS COLUMN (SAFE)
-// =======================
-app.get("/add-status", async (req, res) => {
-  try {
-    await pool.query(`
-      ALTER TABLE products 
-      ADD COLUMN status VARCHAR(20) DEFAULT 'active'
-    `);
-
-    res.send("✅ Added status column");
-  } catch (err) {
-    res.send("❌ " + err.message);
-  }
-});
-
-// =======================
-// DEBUG INFO
+// WHO AM I DEBUG
 // =======================
 app.get("/whoami", (req, res) => {
   res.json({
     file: __filename,
     dir: __dirname,
   });
-});
-
-// =======================
-// TEST USERS
-// =======================
-app.get("/users-test", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT * FROM users");
-    res.json(rows);
-  } catch (err) {
-    res.json(err.message);
-  }
-});
-
-// =======================
-// SET ADMIN (LINH HOẠT)
-// =======================
-// dùng: /set-admin?email=abc@gmail.com
-app.get("/set-admin/:email", async (req, res) => {
-  const { email } = req.params;
-
-  try {
-    await pool.query(`
-      UPDATE users 
-      SET role = 'admin' 
-      WHERE email = ?
-    `, [email]);
-
-    res.send(`Đã set admin cho ${email}`);
-  } catch (err) {
-    res.send(err.message);
-  }
-});
-
-// =======================
-// REMOVE ADMIN (OPTIONAL)
-// =======================
-app.get("/remove-admin", async (req, res) => {
-  const { email } = req.query;
-
-  if (!email) {
-    return res.send("❌ Thiếu email");
-  }
-
-  try {
-    await pool.query(
-      "UPDATE users SET role = 'user' WHERE email = ?",
-      [email]
-    );
-
-    res.send(`✅ Đã gỡ admin của ${email}`);
-  } catch (err) {
-    res.send("❌ " + err.message);
-  }
 });
 
 // =======================

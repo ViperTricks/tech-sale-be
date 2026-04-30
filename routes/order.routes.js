@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const auth = require("../middleware/auth");
+
 const vnpayController = require("../controllers/vnpay.controller");
 const momoController = require("../controllers/momo.controller");
 const ordersController = require("../controllers/orders.controller");
@@ -15,21 +17,10 @@ router.post("/create-momo", momoController.createMomoPayment);
 // ORDERS ROUTES
 // ======================
 
-// 👉 LẤY DANH SÁCH ĐƠN HÀNG (QUAN TRỌNG)
-router.get("/", async (req, res) => {
-  try {
-    const orders = await ordersController.getAllOrders?.();
+// 👉 LẤY DANH SÁCH ĐƠN HÀNG (CẦN AUTH)
+router.get("/", auth, ordersController.getOrders);
 
-    // fallback an toàn nếu controller chưa viết
-    if (!orders) return res.json([]);
-
-    return res.json(orders);
-  } catch (err) {
-    return res.status(500).json([]);
-  }
-});
-
-// 👉 TẠO / HOÀN TẤT ORDER
-router.post("/complete", ordersController.completeOrder);
+// 👉 HOÀN TẤT ĐƠN HÀNG
+router.post("/complete", auth, ordersController.completeOrder);
 
 module.exports = router;

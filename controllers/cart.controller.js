@@ -1,5 +1,11 @@
 const pool = require("../config/db");
-
+// Add to cart → DB(cart_items)
+// ↓
+// GET /cart → render UI
+// ↓
+// Update / Delete
+// ↓
+// Checkout → chuyển sang payment
 const getCartId = async (user_id) => {
   const [rows] = await pool.query(
     "SELECT cart_id FROM carts WHERE user_id = ? LIMIT 1",
@@ -169,3 +175,69 @@ exports.deleteCartItem = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
+// 🛒 2. LUỒNG CART (Giỏ hàng)
+// 🔹 Cấu trúc DB (suy ra từ code)
+// carts (1 user = 1 cart)
+// cart_items (list sản phẩm trong cart)
+// 🔹 2.1 Thêm vào giỏ hàng
+// API:
+// POST /cart
+// Flow:
+// Frontend gọi:
+// addToCart(product_id)
+// Backend:
+// const cart_id = await getOrCreateCartId(user_id);
+
+// 👉 Logic:
+
+// Nếu chưa có cart → tạo mới
+// Nếu có → dùng lại
+// Check sản phẩm đã tồn tại chưa:
+// SELECT * FROM cart_items WHERE cart_id AND product_id
+
+// 👉 Nếu có:
+
+// UPDATE quantity = quantity + ?
+
+// 👉 Nếu chưa:
+
+// Query product từ bảng products
+// Insert vào cart_items
+// 🔹 2.2 Lấy giỏ hàng
+// API:
+// GET /cart
+// Flow:
+// Lấy user_id từ JWT
+// Tìm cart_id
+// Query:
+// SELECT cart_item_id, product_id, name, price, quantity
+// FROM cart_items
+// Trả về list items
+// 🔹 2.3 Update số lượng
+// API:
+// POST /cart/update
+// Flow:
+// UPDATE quantity = quantity + change
+
+// 👉 Nếu quantity <= 0:
+
+// DELETE item
+// 🔹 2.4 Xóa item
+// DELETE /cart/:id
+
+// → Xóa theo cart_item_id
+
+// 🔹 Frontend (Cart.jsx)
+// Flow:
+// Khi load:
+// fetchCart()
+// Tính tổng tiền:
+// totalBill = sum(price * quantity)
+// Update:
+// handleUpdateQuantity(product_id, ±1)
+// Checkout:
+// navigate('/checkout', { state: { totalAmount } })
+// localStorage.setItem("checkoutAmount", totalBill);

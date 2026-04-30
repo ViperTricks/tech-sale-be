@@ -17,6 +17,16 @@ exports.getAllOrders = async (req, res) => {
     }
 };
 
+// ======================
+// HELPER: GET CART ID
+// ======================
+const getCartIdByUserId = async (user_id) => {
+    const [rows] = await pool.query(
+        "SELECT cart_id FROM carts WHERE user_id = ? LIMIT 1",
+        [user_id]
+    );
+    return rows.length ? rows[0].cart_id : null;
+};
 
 // ======================
 // COMPLETE ORDER
@@ -27,32 +37,43 @@ exports.completeOrder = async (req, res) => {
     try {
         const { phone, address, method } = req.body;
 
-        // ⚠️ FIX SAU: lấy user từ token (tạm thời hardcode)
-        const user_id = req.user?.userId || 1;
+        // kiểm tra auth
+        if (!req.user || !req.user.userId) {
+            return res.status(401).json({ message: "Không tìm thấy user" });
+        }
 
-        // ⚠️ FIX SAU: cart theo user (tạm hardcode)
-        const cart_id = 1;
+        const user_id = req.user.userId;
+
+        // lấy cart thật
+        const cart_id = await getCartIdByUserId(user_id);
+
+        if (!cart_id) {
+            return res.status(404).json({ message: "Giỏ hàng không tồn tại" });
+        }
 
         await connection.beginTransaction();
 
-        // 1. lấy cart items
+        // lock cart items
         const [cartItems] = await connection.query(
-            "SELECT * FROM cart_items WHERE cart_id = ?",
+            "SELECT * FROM cart_items WHERE cart_id = ? FOR UPDATE",
             [cart_id]
         );
 
-        if (!cartItems.length) {
+        if (cartItems.length === 0) {
             await connection.rollback();
-            return res.status(400).json({ message: "Cart empty" });
+            return res.json({
+                success: true,
+                message: "Giỏ hàng đã trống"
+            });
         }
 
-        // 2. tính total
+        // tính tổng tiền
         const total = cartItems.reduce(
-            (sum, i) => sum + i.price * i.quantity,
+            (sum, item) => sum + item.price * item.quantity,
             0
         );
 
-        // 3. tạo order
+        // tạo order
         const [orderResult] = await connection.query(
             `INSERT INTO orders 
             (user_id, total_price, status, shipping_address, phone, payment_method)
@@ -62,22 +83,17 @@ exports.completeOrder = async (req, res) => {
 
         const orderId = orderResult.insertId;
 
-        // 4. insert order_items
+        // insert order_items
         for (const item of cartItems) {
             await connection.query(
                 `INSERT INTO order_items 
                 (order_id, product_id, quantity, price)
                 VALUES (?, ?, ?, ?)`,
-                [
-                    orderId,
-                    item.product_id,
-                    item.quantity,
-                    item.price
-                ]
+                [orderId, item.product_id, item.quantity, item.price]
             );
         }
 
-        // 5. clear cart
+        // clear cart
         await connection.query(
             "DELETE FROM cart_items WHERE cart_id = ?",
             [cart_id]
@@ -87,13 +103,30 @@ exports.completeOrder = async (req, res) => {
 
         res.json({
             success: true,
+            message: "Thanh toán thành công",
             orderId
         });
 
     } catch (err) {
-        await connection.rollback();
+        if (connection) await connection.rollback();
+        console.error("Order error:", err.message);
         res.status(500).json({ error: err.message });
     } finally {
         connection.release();
+    }
+};
+
+// ======================
+// GET ORDERS
+// ======================
+exports.getOrders = async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            "SELECT * FROM orders ORDER BY created_at DESC"
+        );
+
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 };
