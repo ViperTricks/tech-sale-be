@@ -4,8 +4,9 @@ const Auth = require("../models/auth.model");
 
 const SECRET = process.env.JWT_SECRET;
 
-
+// ======================
 // REGISTER
+// ======================
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -24,7 +25,7 @@ const register = async (req, res) => {
     const userId = await Auth.create({
       name,
       email,
-      password_hash: hashedPassword, // ✔️ đúng DB
+      password_hash: hashedPassword,
     });
 
     res.json({
@@ -37,33 +38,37 @@ const register = async (req, res) => {
   }
 };
 
-// LOGIN (FIX CHUẨN)
+// ======================
+// LOGIN
+// ======================
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body; // ✔️ sửa lại
+    const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Thiếu email hoặc password" });
     }
 
     const user = await Auth.findByEmail(email);
+
     if (!user) {
       return res.status(400).json({ message: "Email không tồn tại" });
     }
 
-    // ✔️ so password thường với hash
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
       return res.status(400).json({ message: "Sai mật khẩu" });
     }
 
+    // 🔥 đảm bảo luôn có role
+    const role = user.role || "user";
+
     const token = jwt.sign(
       {
         userId: user.user_id,
         email: user.email,
-        phone: user.phone,
-        address: user.address
+        role: role, // 🔥 thêm vào token luôn (quan trọng)
       },
       SECRET,
       { expiresIn: "1h" }
@@ -76,6 +81,7 @@ const login = async (req, res) => {
         id: user.user_id,
         name: user.name,
         email: user.email,
+        role: role, // 🔥 FIX CHÍNH
       },
     });
 
@@ -83,7 +89,10 @@ const login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// ======================
 // GET PROFILE
+// ======================
 const getProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -99,20 +108,23 @@ const getProfile = async (req, res) => {
       name: user.name,
       email: user.email,
       phone: user.phone,
-      address: user.address
+      address: user.address,
+      role: user.role || "user", // 🔥 thêm luôn cho đồng bộ
     });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+// ======================
 // UPDATE PROFILE
+// ======================
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { name, phone, address } = req.body;
 
-    // validate đơn giản
     if (!name) {
       return res.status(400).json({ message: "Tên không được để trống" });
     }
@@ -125,4 +137,5 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 module.exports = { register, login, getProfile, updateProfile };
