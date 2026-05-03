@@ -8,7 +8,7 @@ const getCartIdByUserId = async (user_id) => {
     );
     return rows.length ? rows[0].cart_id : null;
 };
-// --- HOÀN TẤT ĐƠN HÀNG VÀ XÓA GIỎ (FIX BUG CONNECTION CỦA VINH) ---
+// --- HOÀN TẤT ĐƠN HÀNG VÀ XÓA GIỎ (FIX CONNECTION ROLLBACK/RELEASE) ---
 exports.completeOrder = async (req, res) => {
     let connection; // Khai báo ở ngoài để block finally nhìn thấy
     
