@@ -24,6 +24,9 @@ const orderRoutes = require("./routes/order.routes");
 const userRoutes = require("./routes/user.routes");
 
 // mount routes
+const userRoutes = require("./routes/user.routes"); 
+const dashboardRoutes = require("./routes/dashboard.routes");
+
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
@@ -40,6 +43,8 @@ app.get("/health", (req, res) => {
 // =======================
 // SIMPLE TEST ROUTE
 // =======================
+app.use("/dashboard", dashboardRoutes);
+
 app.get("/kiemtra", (req, res) => {
   res.send("<h1>Server OK - Backend running</h1>");
 });
@@ -73,4 +78,9 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at port ${PORT}`);
+// start server
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running at port ${PORT}`);
 });
