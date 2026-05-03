@@ -6,8 +6,8 @@ const pool = require("../config/db");
 exports.getAllOrders = async (req, res) => {
     try {
         const [rows] = await pool.query(`
-            SELECT * 
-            FROM orders 
+            SELECT *
+            FROM orders
             ORDER BY created_at DESC
         `);
 
@@ -31,21 +31,14 @@ const getCartIdByUserId = async (user_id) => {
 // ======================
 // COMPLETE ORDER
 // ======================
-exports.completeOrder = async (req, res) => {
-    const connection = await pool.getConnection();
-
-    try {
-        const { phone, address, method } = req.body;
-
-        // kiểm tra auth
 // --- HOÀN TẤT ĐƠN HÀNG VÀ XÓA GIỎ (FIX CONNECTION ROLLBACK/RELEASE) ---
 exports.completeOrder = async (req, res) => {
     let connection; // Khai báo ở ngoài để block finally nhìn thấy
-    
+
     try {
         // 1. Lấy connection bỏ vô try cho an toàn tuyệt đối
         connection = await pool.getConnection();
-        
+
         const { phone, address } = req.body;
 
         // 2. Kiểm tra Auth
@@ -72,27 +65,13 @@ exports.completeOrder = async (req, res) => {
             [cart_id]
         );
 
-        if (cartItems.length === 0) {
-            await connection.rollback();
-            return res.json({
-                success: true,
-                message: "Giỏ hàng đã trống"
-            });
-        }
-
-        // tính tổng tiền
-        const total = cartItems.reduce(
-            (sum, item) => sum + item.price * item.quantity,
-            0
-        );
-
         // tạo order
         // 5. KIỂM TRA GIỎ HÀNG
         if (cartItems.length === 0) {
             await connection.rollback();
-            return res.json({ 
-                success: true, 
-                message: "Đơn hàng đã được xử lý (Giỏ hàng đã trống)" 
+            return res.json({
+                success: true,
+                message: "Đơn hàng đã được xử lý (Giỏ hàng đã trống)"
             });
         }
 
@@ -101,7 +80,7 @@ exports.completeOrder = async (req, res) => {
 
         // 7. Tạo đơn hàng vào bảng orders
         const [orderResult] = await connection.query(
-            `INSERT INTO orders 
+            `INSERT INTO orders
             (user_id, total_price, status, shipping_address, phone, payment_method)
             VALUES (?, ?, 'completed', ?, ?, ?)`,
             [user_id, total, address, phone, method]
@@ -113,7 +92,7 @@ exports.completeOrder = async (req, res) => {
         // 8. Chuyển sản phẩm sang bảng order_items
         for (const item of cartItems) {
             await connection.query(
-                `INSERT INTO order_items 
+                `INSERT INTO order_items
                 (order_id, product_id, quantity, price)
                 VALUES (?, ?, ?, ?)`,
                 [orderId, item.product_id, item.quantity, item.price]
@@ -141,7 +120,7 @@ exports.completeOrder = async (req, res) => {
         console.error("Order error:", err.message);
         res.status(500).json({ error: err.message });
         console.error("Lỗi Transaction:", err.message);
-        
+
         // FIX LỖI "CLOSED STATE" Ở ĐÂY
         if (connection) {
             try {
@@ -151,7 +130,7 @@ exports.completeOrder = async (req, res) => {
             }
         }
         res.status(500).json({ error: "Lỗi hệ thống khi xử lý thanh toán" });
-        
+
     } finally {
         // LUÔN LUÔN GIẢI PHÓNG KẾT NỐI
         if (connection) {

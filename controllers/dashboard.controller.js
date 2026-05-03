@@ -17,20 +17,20 @@ const getDashboardStats = async (req, res) => {
     // ==========================================
     const getCond = (prefix = "") => {
       const col = prefix ? `${prefix}.created_at` : "created_at";
-      if (range === "day")   return `DATE(${col}) = CURDATE()`;
+      if (range === "day") return `DATE(${col}) = CURDATE()`;
       if (range === "month") return `YEAR(${col}) = YEAR(CURDATE()) AND MONTH(${col}) = MONTH(CURDATE())`;
       return `YEARWEEK(${col}, 1) = YEARWEEK(CURDATE(), 1)`;
     };
 
     const getPrevCond = (prefix = "") => {
       const col = prefix ? `${prefix}.created_at` : "created_at";
-      if (range === "day")   return `DATE(${col}) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)`;
+      if (range === "day") return `DATE(${col}) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)`;
       if (range === "month") return `YEAR(${col}) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) AND MONTH(${col}) = MONTH(DATE_SUB(CURDATE(), INTERVAL 1 MONTH))`;
       return `YEARWEEK(${col}, 1) = YEARWEEK(DATE_SUB(CURDATE(), INTERVAL 1 WEEK), 1)`;
     };
 
-    const condNormal     = getCond();
-    const condAlias      = getCond("o");
+    const condNormal = getCond();
+    const condAlias = getCond("o");
     const prevCondNormal = getPrevCond();
 
     // ==========================================
@@ -39,7 +39,7 @@ const getDashboardStats = async (req, res) => {
     // ==========================================
     let revenueQuery = "";
     if (range === "day") {
-  revenueQuery = `
+      revenueQuery = `
     SELECT CONCAT(HOUR(created_at), 'h') AS name,
            SUM(total_price)              AS doanhThu
     FROM orders
@@ -47,8 +47,8 @@ const getDashboardStats = async (req, res) => {
     GROUP BY CONCAT(HOUR(created_at), 'h')
     ORDER BY MIN(created_at)
   `;
-} else if (range === "month") {
-  revenueQuery = `
+    } else if (range === "month") {
+      revenueQuery = `
     SELECT DATE_FORMAT(created_at, '%d/%m') AS name,
            SUM(total_price)                 AS doanhThu
     FROM orders
@@ -56,8 +56,8 @@ const getDashboardStats = async (req, res) => {
     GROUP BY DATE_FORMAT(created_at, '%d/%m')
     ORDER BY MIN(created_at)
   `;
-} else {
-  revenueQuery = `
+    } else {
+      revenueQuery = `
     SELECT DATE_FORMAT(created_at, 'Tuần %u') AS name,
            SUM(total_price)                   AS doanhThu
     FROM orders
@@ -65,7 +65,7 @@ const getDashboardStats = async (req, res) => {
     GROUP BY DATE_FORMAT(created_at, 'Tuần %u')
     ORDER BY MIN(created_at)
   `;
-}
+    }
 
     // ==========================================
     // 3. CHẠY TẤT CẢ QUERY SONG SONG
@@ -149,21 +149,21 @@ const getDashboardStats = async (req, res) => {
     };
 
     const trendOrder = calcTrend(curStats.totalOrders, prevStats.totalOrders);
-    const trendRev   = calcTrend(Number(curStats.totalRevenue), Number(prevStats.totalRevenue));
+    const trendRev = calcTrend(Number(curStats.totalRevenue), Number(prevStats.totalRevenue));
 
     // ==========================================
     // 5. FORMAT TRẠNG THÁI ĐƠN HÀNG
     // ==========================================
     const statusMap = {
-      completed : "Đã giao",
-      pending   : "Đang xử lý",
-      confirmed : "Đã xác nhận",
-      shipping  : "Đang giao",
-      cancelled : "Đã hủy",
+      completed: "Đã giao",
+      pending: "Đang xử lý",
+      confirmed: "Đã xác nhận",
+      shipping: "Đang giao",
+      cancelled: "Đã hủy",
     };
 
     const formattedStatusData = orderStatusData.map((item) => ({
-      name : statusMap[item.name] || item.name,
+      name: statusMap[item.name] || item.name,
       value: Number(item.value),
     }));
 
@@ -172,16 +172,16 @@ const getDashboardStats = async (req, res) => {
     // ==========================================
     return res.status(200).json({
       stats: {
-        totalOrders  : curStats.totalOrders         || 0,
-        totalUsers   : usersResult.totalUsers        || 0,
-        totalRevenue : Number(curStats.totalRevenue) || 0,
+        totalOrders: curStats.totalOrders || 0,
+        totalUsers: usersResult.totalUsers || 0,
+        totalRevenue: Number(curStats.totalRevenue) || 0,
         trendOrder,
         trendRev,
       },
       revenueData,
       topProductsData,
-      orderStatusData : formattedStatusData,
-      categoryRevenue : categoryRevenueData,
+      orderStatusData: formattedStatusData,
+      categoryRevenue: categoryRevenueData,
     });
 
   } catch (error) {
