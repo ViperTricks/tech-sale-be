@@ -16,7 +16,7 @@ exports.completeOrder = async (req, res) => {
         // 1. Lấy connection bỏ vô try cho an toàn tuyệt đối
         connection = await pool.getConnection();
         
-        const { orderId, phone, address, method } = req.body;
+        const { phone, address } = req.body;
 
         // 2. Kiểm tra Auth
         if (!req.user || !req.user.userId) {
