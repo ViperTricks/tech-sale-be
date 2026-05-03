@@ -187,10 +187,16 @@ const getDashboardStats = async (req, res) => {
   } catch (error) {
     console.error("❌ Lỗi Dashboard:", error.message);
     console.error("SQL:", error.sql || "");
-    return res.status(500).json({
-      message : "Lỗi máy chủ nội bộ",
-      detail  : error.message,
-    });
+
+    const errorResponse = {
+      message: "Lỗi máy chủ nội bộ",
+    };
+
+    if (process.env.NODE_ENV === "development") {
+      errorResponse.detail = error.message;
+    }
+
+    return res.status(500).json(errorResponse);
   }
 };
 
