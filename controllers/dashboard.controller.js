@@ -4,6 +4,13 @@ const pool = require("../config/db");
 const getDashboardStats = async (req, res) => {
   try {
     const { range } = req.query; // 'day', 'week', 'month'
+    const allowedRanges = new Set(["day", "week", "month"]);
+
+    if (!allowedRanges.has(range)) {
+      return res.status(400).json({
+        message: "Invalid range. Allowed values are 'day', 'week', or 'month'.",
+      });
+    }
 
     // ==========================================
     // 1. HÀM TẠO ĐIỀU KIỆN THỜI GIAN
