@@ -77,6 +77,16 @@ const auth = {
 
     return result.affectedRows;
   },
+
+  // 🔥 FIX: PHẢI nằm trong object
+  setAdminByEmail: async (email) => {
+    const [result] = await pool.query(
+      "UPDATE users SET role = 'admin' WHERE email = ?",
+      [email]
+    );
+
+    return result.affectedRows;
+  }
 };
 
 module.exports = auth;

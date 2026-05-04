@@ -61,14 +61,13 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Sai mật khẩu" });
     }
 
-    // 🔥 đảm bảo luôn có role
     const role = user.role || "user";
 
     const token = jwt.sign(
       {
         userId: user.user_id,
         email: user.email,
-        role: role, // 🔥 thêm vào token luôn (quan trọng)
+        role: role,
       },
       SECRET,
       { expiresIn: "1h" }
@@ -81,7 +80,7 @@ const login = async (req, res) => {
         id: user.user_id,
         name: user.name,
         email: user.email,
-        role: role, // 🔥 FIX CHÍNH
+        role: role,
       },
     });
 
@@ -109,7 +108,7 @@ const getProfile = async (req, res) => {
       email: user.email,
       phone: user.phone,
       address: user.address,
-      role: user.role || "user", // 🔥 thêm luôn cho đồng bộ
+      role: user.role || "user",
     });
 
   } catch (err) {
@@ -138,4 +137,38 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getProfile, updateProfile };
+// ======================
+// 🔥 SET ADMIN (FIX CHUẨN)
+// ======================
+const setAdminByEmail = async (req, res) => {
+  try {
+    // 👉 hỗ trợ cả GET (query) và POST (body)
+    const email = req.query.email || req.body.email;
+
+    if (!email) {
+      return res.status(400).json({ message: "Thiếu email" });
+    }
+
+    const result = await Auth.setAdminByEmail(email);
+
+    if (result === 0) {
+      return res.status(404).json({ message: "Không tìm thấy user" });
+    }
+
+    res.json({
+      success: true,
+      message: `Đã set admin cho ${email}`,
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  getProfile,
+  updateProfile,
+  setAdminByEmail
+};
